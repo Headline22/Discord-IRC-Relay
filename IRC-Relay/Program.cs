@@ -32,17 +32,17 @@ namespace IRCRelay
 
         private async Task MainAsync()
         {
-			try
-			{
-				config = Settings.Config.Load();
-			}
-			catch
-			{
-				Console.WriteLine("Unable to load config. Ensure Settings.xml is formatted correctly.");
+            try
+            {
+                config = Settings.Config.Load();
+            }
+            catch
+            {
+                Console.WriteLine("Unable to load config. Ensure Settings.xml is formatted correctly.");
                 config = Settings.Config.CreateDefaultConfig();
                 Settings.Config.Save(config);
-				return;
-			}
+                return;
+            }
 
             client = new DiscordSocketClient();
             commands = new CommandService();

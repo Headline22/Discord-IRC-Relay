@@ -3,12 +3,12 @@ using System.Xml.Serialization;
 
 namespace IRCRelay.Settings
 {
-	public class Config
-	{
-		// ---------------------------------------------------------------------------------------
-		// Insert configurable values below:
-		public string IRCServer;
-		public string IRCPort;
+    public class Config
+    {
+        // ---------------------------------------------------------------------------------------
+        // Insert configurable values below:
+        public string IRCServer;
+        public string IRCPort;
         public string IRCChannel;
         public string IRCNick;
 
@@ -21,19 +21,19 @@ namespace IRCRelay.Settings
         public string DiscordBotToken;
         public string DiscordGuildName;
         public string DiscordChannelName;
-		// ---------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------------------------
 
-		// Name of configuration file.
-		[XmlIgnore]
-		public const string FileName = "Settings.xml";
+        // Name of configuration file.
+        [XmlIgnore]
+        public const string FileName = "Settings.xml";
 
-		// Empty constructor for XmlSerializer.
-		public Config()
-		{
-		}
+        // Empty constructor for XmlSerializer.
+        public Config()
+        {
+        }
 
-		// Used to load the default configuration if Load() fails.
-		public static Config CreateDefaultConfig()
+        // Used to load the default configuration if Load() fails.
+        public static Config CreateDefaultConfig()
         {
             Config config = new Config()
             {
@@ -56,20 +56,20 @@ namespace IRCRelay.Settings
 
         // Loads the configuration from file.
         public static Config Load()
-		{
-			var serializer = new XmlSerializer(typeof(Config));
+        {
+            var serializer = new XmlSerializer(typeof(Config));
 
-			using (var fStream = new FileStream(Config.FileName, FileMode.Open))
-				 return (Config)serializer.Deserialize(fStream);
-		}
+            using (var fStream = new FileStream(Config.FileName, FileMode.Open))
+                return (Config)serializer.Deserialize(fStream);
+        }
 
-		// Saves the configuration to file.
-		public static void Save(Config config)
-		{
-			var serializer = new XmlSerializer(typeof(Config));
+        // Saves the configuration to file.
+        public static void Save(Config config)
+        {
+            var serializer = new XmlSerializer(typeof(Config));
 
-			using (var fStream = new FileStream(Config.FileName, FileMode.Create))
-				serializer.Serialize(fStream, config);
-		}
-	}
+            using (var fStream = new FileStream(Config.FileName, FileMode.Create))
+                serializer.Serialize(fStream, config);
+        }
+    }
 }

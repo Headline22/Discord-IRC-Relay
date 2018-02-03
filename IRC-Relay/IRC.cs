@@ -9,8 +9,8 @@ namespace IRCRelay
 {
     public class IRC
     {
-		private IrcClient ircClient;
-		private System.Timers.Timer timer = null;
+        private IrcClient ircClient;
+        private System.Timers.Timer timer = null;
 
         private string server;
         private int port;
@@ -22,83 +22,83 @@ namespace IRCRelay
         private string targetGuild;
         private string targetChannel;
 
-		private bool logMessages;
+        private bool logMessages;
 
         public IRC(string server, int port, string nick, string channel, string loginName, 
                    string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages)
         {
             ircClient = new IrcClient();
 
-			ircClient.Encoding = System.Text.Encoding.UTF8;
-			ircClient.SendDelay = 200;
+            ircClient.Encoding = System.Text.Encoding.UTF8;
+            ircClient.SendDelay = 200;
 
-			ircClient.ActiveChannelSyncing = true;
+            ircClient.ActiveChannelSyncing = true;
+            
+            ircClient.AutoRetry = true;
+            ircClient.AutoRejoin = true;
+            ircClient.AutoRelogin = true;
+            ircClient.AutoRejoinOnKick = true;
 
-			ircClient.AutoRetry = true;
-			ircClient.AutoRejoin = true;
-			ircClient.AutoRelogin = true;
-			ircClient.AutoRejoinOnKick = true;
+            ircClient.OnError += this.OnError;
+            ircClient.OnChannelMessage += this.OnChannelMessage;
+            ircClient.OnDisconnected += this.OnDisconnected;
 
-			ircClient.OnError += this.OnError;
-			ircClient.OnChannelMessage += this.OnChannelMessage;
-			ircClient.OnDisconnected += this.OnDisconnected;
+            timer = new System.Timers.Timer();
 
-			timer = new System.Timers.Timer();
+            timer.Elapsed += Timer_Callback;
 
-			timer.Elapsed += Timer_Callback;
-
-			timer.Enabled = true;
-			timer.AutoReset = true;
+            timer.Enabled = true;
+            timer.AutoReset = true;
             timer.Interval = TimeSpan.FromSeconds(30.0).TotalMilliseconds;
 
             /* Connection Info */
-			this.server = server;
-			this.port = port;
-			this.nick = nick;
-			this.channel = channel;
-			this.loginName = loginName;
-			this.authstring = authstring;
+            this.server = server;
+            this.port = port;
+            this.nick = nick;
+            this.channel = channel;
+            this.loginName = loginName;
+            this.authstring = authstring;
             this.authuser = authuser;
             this.targetGuild = targetGuild;
             this.targetChannel = targetChannel;
             this.logMessages = logMessages;
-		}
+        }
 
         public void SendMessage(string message)
         {
             ircClient.SendMessage(SendType.Message, channel, message);
-		}
+        }
 
         public void SpawnBot()
         {
-			new Thread(() =>
-			{
-				try
-				{
-					ircClient.Connect(server, port);
+            new Thread(() =>
+            {
+                try
+                {
+                    ircClient.Connect(server, port);
 
                     ircClient.Login(nick, loginName);
 
                     if (authstring.Length != 0)
-					{
+                    {
                         ircClient.SendMessage(SendType.Message, authuser, authstring);
 
-						Thread.Sleep(1000); // login delay
-					}
+                        Thread.Sleep(1000); // login delay
+                    }
 
-					ircClient.RfcJoin(channel);
+                    ircClient.RfcJoin(channel);
 
-					ircClient.Listen();
+                    ircClient.Listen();
 
-					timer.Start();
+                    timer.Start();
                 }
-				catch (Exception ex)
-				{
-					Console.WriteLine(ex.Message);
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
                     return;
-				}
+                }
 
-			}).Start();
+            }).Start();
         }
 
         private void Timer_Callback(Object source, ElapsedEventArgs e)
