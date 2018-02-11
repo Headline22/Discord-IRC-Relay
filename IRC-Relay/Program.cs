@@ -115,10 +115,18 @@ namespace IRCRelay
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
                 string[] parts = formatted.Split('\n');
-
-                foreach (String part in parts)
+                
+                if(parts.Length > 3)
                 {
-                    irc.SendMessage("<" + messageParam.Author.Username + "> " + part);
+                    await messageParam.Channel.SendMessageAsync("Error: Make sure you use Code Snippet Syntax.");
+                    return;
+                }
+                else
+                {
+                    foreach (String part in parts)
+                    {
+                        irc.SendMessage("<" + messageParam.Author.Username + "> " + part);
+                    }
                 }
             }
 
