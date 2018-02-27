@@ -1,0 +1,13 @@
+{
+  "IRCServer": "server",
+  "IRCPort": 6667,
+  "IRCChannel": "#channel",
+  "IRCNick": "nick",
+  "IRCAuthUser": "some user",
+  "IRCLoginName": "auth login name",
+  "IRCLogMessages": true,
+  "IRCAuthString": "some command here",
+  "DiscordBotToken": "token",
+  "DiscordGuildName": "server name",
+  "DiscordChannelName": "text channel"
+}

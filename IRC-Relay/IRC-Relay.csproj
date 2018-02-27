@@ -53,6 +53,12 @@
     <Reference Include="Discord.Net.WebSocket, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Discord.Net.WebSocket.1.0.2\lib\net45\Discord.Net.WebSocket.dll</HintPath>
     </Reference>
+    <Reference Include="JsonConfig">
+      <HintPath>deps\JsonConfig.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonFx">
+      <HintPath>deps\JsonFx.dll</HintPath>
+    </Reference>
     <Reference Include="Meebey.SmartIrc4net, Version=0.4.5.0, Culture=neutral, PublicKeyToken=7868485fbf407e0f, processorArchitecture=MSIL">
       <HintPath>..\packages\SmartIrc4net.1.1\lib\Meebey.SmartIrc4net.dll</HintPath>
     </Reference>
@@ -95,17 +101,16 @@
     <Compile Include="LogManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Settings.cs" />
-    <Compile Include="XmlSerializable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Settings.xml">
-      <SubType>Designer</SubType>
-    </Content>
+    <None Include="settings.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties settings_1json__JSONSchema="http://json.schemastore.org/band-manifest" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

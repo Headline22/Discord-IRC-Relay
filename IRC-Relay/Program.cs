@@ -8,8 +8,9 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
 using IRCRelay.Logs;
-using IRCRelay.Settings;
 using Discord.Net.Providers.WS4Net;
+using JsonConfig;
+using System.IO;
 
 namespace IRCRelay
 {
@@ -20,12 +21,15 @@ namespace IRCRelay
 
         /* Instance Vars */
         private IRC irc;
-        private Settings.Config config;
         private CommandService commands;
         private IServiceProvider services;
+        private static dynamic config;
 
         public static void Main(string[] args)
         {
+            var stream = new StreamReader("settings.json");
+            config = Config.ApplyJson(stream.ReadToEnd(), new ConfigObject());
+
             Instance = new Program();
                 
             Instance.MainAsync().GetAwaiter().GetResult();
@@ -33,18 +37,6 @@ namespace IRCRelay
 
         private async Task MainAsync()
         {
-            try
-            {
-                config = Settings.Config.Load();
-            }
-            catch
-            {
-                Console.WriteLine("Unable to load config. Ensure Settings.xml is formatted correctly.");
-                config = Settings.Config.CreateDefaultConfig();
-                Settings.Config.Save(config);
-                return;
-            }
-
             var socketConfig = new DiscordSocketConfig
             {
                 WebSocketProvider = WS4NetProvider.Instance,
@@ -63,9 +55,8 @@ namespace IRCRelay
             await client.LoginAsync(TokenType.Bot, config.DiscordBotToken);
             await client.StartAsync();
 
-            int.TryParse(config.IRCPort, out int port);
             irc = new IRC(config.IRCServer,
-                          port,
+                          config.IRCPort,
                           config.IRCNick,
                           config.IRCChannel,
                           config.IRCLoginName,
