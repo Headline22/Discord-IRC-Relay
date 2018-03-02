@@ -14,8 +14,8 @@ This project is a simple Discord/IRC bot that relays irc messages to and from a 
 
 ## Installation
 - Build the project or [download from our releases page](https://github.com/Headline22/Discord-IRC-Relay/releases)
-- Configure Settings.xml
-- Ensure Settings.xml is alongside the executable
+- Configure Settings.json
+- Ensure Settings.json is alongside the executable
 - Run the executable!
 
 ## Credits 
