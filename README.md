@@ -1,7 +1,7 @@
 # Discord-IRC-Relay
 ![thing](https://i.gyazo.com/2add2e5f5c56abe66b63564e71c4152c.gif)
 
-This project is a simple Discord/IRC bot that relays irc messages to and from a Discord channel. This bot's goal is to provide a bridge between IRC channels and Discord text channels as seemlessly as possible.
+This project is a simple Discord/IRC bot that relays irc messages to and from a Discord channel. This bot's goal is to provide a bridge between IRC channels and Discord text channels as seamlessly as possible.
 
 ## Features
 * Discord emoji name conversion (`<:thinking:213123123>` -> `:thinking:`)
