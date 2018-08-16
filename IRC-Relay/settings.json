@@ -11,5 +11,9 @@
   "DiscordGuildName": "server name",
   "DiscordChannelName": "text channel",
   "SpamFilter": [
+  ],
+  "IRCNameBlacklist": [
+  ],
+  "DiscordUserIDBlacklist": [
   ]
 }

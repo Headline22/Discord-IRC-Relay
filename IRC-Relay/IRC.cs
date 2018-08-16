@@ -5,6 +5,7 @@ using System.Threading;
 using System.Timers;
 using IRCRelay.Logs;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace IRCRelay
 {
@@ -24,9 +25,10 @@ namespace IRCRelay
         private string targetChannel;
 
         private bool logMessages;
+        private List<string> blacklistNames;
 
         public IRC(string server, int port, string nick, string channel, string loginName, 
-                   string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages)
+                   string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages, List<string> blacklistNames)
         {
             ircClient = new IrcClient();
 
@@ -63,6 +65,7 @@ namespace IRCRelay
             this.targetGuild = targetGuild;
             this.targetChannel = targetChannel;
             this.logMessages = logMessages;
+            this.blacklistNames = blacklistNames;
         }
 
         public void SendMessage(string username, string message)
@@ -128,6 +131,21 @@ namespace IRCRelay
         {
             if (e.Data.Nick.Equals(this.nick))
                 return;
+
+            if (blacklistNames != null) // bcompat support
+            {
+                /**
+                 * We'll loop all blacklisted names, if the sender
+                 * has a blacklisted name, we won't relay and ret out
+                 */
+                foreach (string name in blacklistNames)
+                {
+                    if (e.Data.Nick.Equals(name))
+                    {
+                        return;
+                    }
+                }
+            }
 
             if (logMessages)
                 LogManager.WriteLog(MsgSendType.IRCToDiscord, e.Data.Nick, e.Data.Message, "log.txt");

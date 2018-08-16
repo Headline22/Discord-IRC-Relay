@@ -64,7 +64,8 @@ namespace IRCRelay
                           config.IRCAuthUser,
                           config.DiscordGuildName,
                           config.DiscordChannelName,
-                          config.IRCLogMessages);
+                          config.IRCLogMessages,
+                          config.IRCNameBlacklist);
 
             irc.SpawnBot();
 
@@ -80,6 +81,21 @@ namespace IRCRelay
             if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
             if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
+
+            if (config.DiscordUserIDBlacklist != null) //bcompat support
+            {
+                /**
+                 * We'll loop blacklisted user ids. If the user ID is found,
+                 * then we return out and prevent the call
+                 */
+                foreach (string id in config.DiscordUserIDBlacklist)
+                {
+                    if (message.Author.Id == ulong.Parse(id))
+                    {
+                        return;
+                    }
+                }
+            }
 
             /* Santize discord-specific notation to human readable things */
             string formatted = Helpers.MentionToUsername(messageParam.Content, message);
