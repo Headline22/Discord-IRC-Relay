@@ -25,10 +25,10 @@ namespace IRCRelay
         private string targetChannel;
 
         private bool logMessages;
-        private List<string> blacklistNames;
+        private Object[] blacklistNames;
 
         public IRC(string server, int port, string nick, string channel, string loginName, 
-                   string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages, List<string> blacklistNames)
+                   string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages, Object[] blacklistNames)
         {
             ircClient = new IrcClient();
 
