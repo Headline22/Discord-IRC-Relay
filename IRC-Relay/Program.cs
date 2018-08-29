@@ -82,7 +82,6 @@ namespace IRCRelay
             irc.ircClient.Disconnect();
             this.Instance = new Program();
             Instance.MainAsync().GetAwaiter().GetResult();
-
         }
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
