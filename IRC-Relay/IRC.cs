@@ -11,8 +11,8 @@ namespace IRCRelay
 {
     public class IRC
     {
-        private IrcClient ircClient;
-        private System.Timers.Timer timer = null;
+        public IrcClient ircClient;
+        private Program Instance;
 
         private string server;
         private int port;
@@ -28,7 +28,8 @@ namespace IRCRelay
         private Object[] blacklistNames;
 
         public IRC(string server, int port, string nick, string channel, string loginName, 
-                   string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages, Object[] blacklistNames)
+                   string authstring, string authuser, string targetGuild, string targetChannel, 
+                   bool logMessages, Object[] blacklistNames, Program Instance)
         {
             ircClient = new IrcClient();
 
@@ -44,15 +45,6 @@ namespace IRCRelay
 
             ircClient.OnError += this.OnError;
             ircClient.OnChannelMessage += this.OnChannelMessage;
-            ircClient.OnDisconnected += this.OnDisconnected;
-
-            timer = new System.Timers.Timer();
-
-            timer.Elapsed += Timer_Callback;
-
-            timer.Enabled = true;
-            timer.AutoReset = true;
-            timer.Interval = TimeSpan.FromSeconds(30.0).TotalMilliseconds;
 
             /* Connection Info */
             this.server = server;
@@ -66,6 +58,7 @@ namespace IRCRelay
             this.targetChannel = targetChannel;
             this.logMessages = logMessages;
             this.blacklistNames = blacklistNames;
+            this.Instance = Instance;
         }
 
         public void SendMessage(string username, string message)
@@ -93,8 +86,6 @@ namespace IRCRelay
                     ircClient.RfcJoin(channel);
 
                     ircClient.Listen();
-
-                    timer.Start();
                 }
                 catch (Exception ex)
                 {
@@ -105,26 +96,9 @@ namespace IRCRelay
             }).Start();
         }
 
-        private void Timer_Callback(Object source, ElapsedEventArgs e)
-        {
-            if (ircClient.IsConnected)
-            {
-                return;
-            }
-
-            Console.WriteLine("Bot disconnected! Retrying...");
-            this.SpawnBot();
-        }
-
-        private void OnDisconnected(object sender, EventArgs e)
-        {
-            Console.WriteLine("Disconnecting");
-        }
-
         private void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
         {
             Console.WriteLine("Error: " + e.ErrorMessage);
-            Environment.Exit(0);
         }
 
         private void OnChannelMessage(object sender, IrcEventArgs e)
@@ -180,7 +154,7 @@ namespace IRCRelay
                 }
             }
 
-            Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg, targetChannel);
+            Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg, targetChannel, Instance);
         }
     }
 }

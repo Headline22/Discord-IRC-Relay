@@ -14,9 +14,9 @@ using System.IO;
 
 namespace IRCRelay
 {
-    class Program
+    public class Program
     {
-        public static Program Instance; //Entry to access DiscordSocketClient for Helpers.cs
+        public Program Instance; //Entry to access DiscordSocketClient for Helpers.cs
         public DiscordSocketClient client;
 
         /* Instance Vars */
@@ -30,7 +30,7 @@ namespace IRCRelay
             var stream = new StreamReader("settings.json");
             config = Config.ApplyJson(stream.ReadToEnd(), new ConfigObject());
 
-            Instance = new Program();
+            Program Instance = new Program();
                 
             Instance.MainAsync().GetAwaiter().GetResult();
         }
@@ -51,6 +51,7 @@ namespace IRCRelay
             services = new ServiceCollection().BuildServiceProvider();
 
             client.MessageReceived += OnDiscordMessage;
+            client.Disconnected += OnDiscordDisconnect;
 
             await client.LoginAsync(TokenType.Bot, config.DiscordBotToken);
             await client.StartAsync();
@@ -65,11 +66,22 @@ namespace IRCRelay
                           config.DiscordGuildName,
                           config.DiscordChannelName,
                           config.IRCLogMessages,
-                          config.IRCNameBlacklist);
+                          config.IRCNameBlacklist, 
+                          this);
 
             irc.SpawnBot();
 
             await Task.Delay(-1);
+        }
+
+        /* When we disconnect from discord (we got booted off), we'll remake */
+        public async Task OnDiscordDisconnect(Exception ex)
+        {
+            await Log(new LogMessage(LogSeverity.Critical, ex.Source, ex.Message));
+
+            irc.ircClient.Disconnect();
+            this.Instance = new Program();
+            Instance.MainAsync().GetAwaiter().GetResult();
         }
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
