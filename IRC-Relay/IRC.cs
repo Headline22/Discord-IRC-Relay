@@ -6,33 +6,25 @@ using System.Timers;
 using IRCRelay.Logs;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IRCRelay
 {
     public class IRC
     {
-        public IrcClient ircClient;
-        private Program Instance;
+        private Session session;
+        private dynamic config;
+        private IrcClient ircClient;
+        public bool shouldrun;
 
-        private string server;
-        private int port;
-        private string nick;
-        private string channel;
-        private string loginName;
-        private string authstring;
-        private string authuser;
-        private string targetGuild;
-        private string targetChannel;
+        public IrcClient Client { get => ircClient; set => ircClient = value; }
 
-        private bool logMessages;
-        private Object[] blacklistNames;
-
-        public IRC(string server, int port, string nick, string channel, string loginName, 
-                   string authstring, string authuser, string targetGuild, string targetChannel, 
-                   bool logMessages, Object[] blacklistNames, Program Instance)
+        public IRC(dynamic config, Session session)
         {
-            ircClient = new IrcClient();
+            this.config = config;
+            this.session = session;
 
+            ircClient = new IrcClient();
             ircClient.Encoding = System.Text.Encoding.UTF8;
             ircClient.SendDelay = 200;
 
@@ -44,75 +36,54 @@ namespace IRCRelay
             ircClient.AutoRejoinOnKick = true;
 
             ircClient.OnError += this.OnError;
-            ircClient.OnChannelMessage += this.OnChannelMessage;
 
-            /* Connection Info */
-            this.server = server;
-            this.port = port;
-            this.nick = nick;
-            this.channel = channel;
-            this.loginName = loginName;
-            this.authstring = authstring;
-            this.authuser = authuser;
-            this.targetGuild = targetGuild;
-            this.targetChannel = targetChannel;
-            this.logMessages = logMessages;
-            this.blacklistNames = blacklistNames;
-            this.Instance = Instance;
+            ircClient.OnChannelMessage += this.OnChannelMessage;
         }
 
         public void SendMessage(string username, string message)
         {
-            ircClient.SendMessage(SendType.Message, channel, "<" + username + "> " + message);
+            ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
         }
 
-        public void SpawnBot()
+        public async Task SpawnBot()
         {
-            new Thread(() =>
+            shouldrun = true;
+            await Task.Run(() =>
             {
-                try
+                ircClient.Connect(config.IRCServer, config.IRCPort);
+
+                ircClient.Login(config.IRCNick, config.IRCLoginName);
+
+                if (config.IRCAuthString.Length != 0)
                 {
-                    ircClient.Connect(server, port);
+                    ircClient.SendMessage(SendType.Message, config.IRCAuthUser, config.IRCAuthString);
 
-                    ircClient.Login(nick, loginName);
-
-                    if (authstring.Length != 0)
-                    {
-                        ircClient.SendMessage(SendType.Message, authuser, authstring);
-
-                        Thread.Sleep(1000); // login delay
-                    }
-
-                    ircClient.RfcJoin(channel);
-
-                    ircClient.Listen();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    return;
+                    Thread.Sleep(1000); // login delay
                 }
 
-            }).Start();
+                ircClient.RfcJoin(config.IRCChannel);
+                ircClient.Listen();
+            });
         }
 
-        private void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
+        private void OnError(object sender, ErrorEventArgs e)
         {
             Console.WriteLine("Error: " + e.ErrorMessage);
+            session.Kill();
         }
 
         private void OnChannelMessage(object sender, IrcEventArgs e)
         {
-            if (e.Data.Nick.Equals(this.nick))
+            if (e.Data.Nick.Equals(this.config.IRCNick))
                 return;
 
-            if (blacklistNames != null) // bcompat support
+            if (config.IRCNameBlacklist != null) // bcompat support
             {
                 /**
                  * We'll loop all blacklisted names, if the sender
                  * has a blacklisted name, we won't relay and ret out
                  */
-                foreach (string name in blacklistNames)
+                foreach (string name in config.IRCNameBlacklist)
                 {
                     if (e.Data.Nick.Equals(name))
                     {
@@ -121,7 +92,7 @@ namespace IRCRelay
                 }
             }
 
-            if (logMessages)
+            if (config.IRCLogMessages)
                 LogManager.WriteLog(MsgSendType.IRCToDiscord, e.Data.Nick, e.Data.Message, "log.txt");
 
             string msg = e.Data.Message;
@@ -132,7 +103,7 @@ namespace IRCRelay
 
             string prefix = "";
 
-            var usr = e.Data.Irc.GetChannelUser(channel, e.Data.Nick);
+            var usr = e.Data.Irc.GetChannelUser(config.IRCChannel, e.Data.Nick);
             if (usr.IsOp)
             {
                 prefix = "@";
@@ -142,19 +113,19 @@ namespace IRCRelay
                 prefix = "+";
             }
 
-            if (Program.config.SpamFilter != null) //bcompat for older configurations
+            if (config.SpamFilter != null) //bcompat for older configurations
             {
-                foreach (string badstr in Program.config.SpamFilter)
+                foreach (string badstr in config.SpamFilter)
                 {
                     if (msg.ToLower().Contains(badstr.ToLower()))
                     {
-                        ircClient.SendMessage(SendType.Message, channel, "Message with blacklisted input will not be relayed!");
+                        ircClient.SendMessage(SendType.Message, config.IRCChannel, "Message with blacklisted input will not be relayed!");
                         return;
                     }
                 }
             }
 
-            Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg, targetChannel, Instance);
+            session.SendMessage(Session.MessageDestination.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
         }
     }
 }

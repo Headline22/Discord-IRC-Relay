@@ -174,9 +174,9 @@ namespace IRCRelay
             return returnString;
         }
 
-        public static void SendMessageAllToTarget(string targetGuild, string message, string targetChannel, Program Instance)
+        public static void SendMessageAllToTarget(string targetGuild, string message, string targetChannel, Discord discord)
         {
-            foreach (SocketGuild guild in Instance.client.Guilds) // loop through each discord guild
+            foreach (SocketGuild guild in discord.Client.Guilds) // loop through each discord guild
             {
                 
                 if (guild.Name.ToLower().Contains(targetGuild.ToLower())) // find target 
