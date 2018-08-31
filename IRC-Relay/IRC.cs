@@ -1,12 +1,11 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 using Meebey.SmartIrc4net;
-using System.Threading;
-using System.Timers;
+
 using IRCRelay.Logs;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace IRCRelay
 {
@@ -24,24 +23,26 @@ namespace IRCRelay
             this.config = config;
             this.session = session;
 
-            ircClient = new IrcClient();
-            ircClient.Encoding = System.Text.Encoding.UTF8;
-            ircClient.SendDelay = 200;
+            ircClient = new IrcClient
+            {
+                Encoding = System.Text.Encoding.UTF8,
+                SendDelay = 200,
 
-            ircClient.ActiveChannelSyncing = true;
-            
-            ircClient.AutoRetry = true;
-            ircClient.AutoRejoin = true;
-            ircClient.AutoRelogin = true;
-            ircClient.AutoRejoinOnKick = true;
+                ActiveChannelSyncing = true,
+
+                AutoRetry = true,
+                AutoRejoin = true,
+                AutoRelogin = true,
+                AutoRejoinOnKick = true
+            };
 
             ircClient.OnError += this.OnError;
-
             ircClient.OnChannelMessage += this.OnChannelMessage;
         }
 
         public void SendMessage(string username, string message)
         {
+            session.Kill();
             ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
         }
 

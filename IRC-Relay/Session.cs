@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using System.Threading.Tasks;
 
 namespace IRCRelay
 {
@@ -29,7 +24,7 @@ namespace IRCRelay
 
         public void Kill()
         {
-            discord.Client.Dispose();
+            discord.Dispose();
             irc.Client.RfcQuit();
 
             this.alive = false;

@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 
 namespace IRCRelay.Logs
 {
@@ -45,7 +40,7 @@ namespace IRCRelay.Logs
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error Writing To File: ", ex.Message);
+                Console.WriteLine("Error Writing To File: {0}", ex.Message);
             }
             Console.ForegroundColor = ConsoleColor.White;
         }

@@ -1,18 +1,18 @@
-﻿using Discord;
+﻿using System;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using Discord;
 using Discord.Commands;
 using Discord.Net.Providers.WS4Net;
 using Discord.WebSocket;
+
 using IRCRelay.Logs;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IRCRelay
 {
-    class Discord
+    class Discord : IDisposable
     {
         private Session session;
 
@@ -60,8 +60,7 @@ namespace IRCRelay
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
             string url = "";
-            var message = messageParam as SocketUserMessage;
-            if (message == null) return;
+            if (!(messageParam is SocketUserMessage message)) return;
 
             if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
@@ -168,6 +167,11 @@ namespace IRCRelay
         public Task Log(LogMessage msg)
         {
             return Task.Run(() => Console.WriteLine(msg.ToString()));
+        }
+
+        public void Dispose()
+        {
+            client.Dispose();
         }
     }
 }
