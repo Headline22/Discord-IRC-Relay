@@ -27,7 +27,7 @@ namespace IRCRelay
             ircClient = new IrcClient
             {
                 Encoding = System.Text.Encoding.UTF8,
-                SendDelay = 200,
+                SendDelay = 50,
 
                 ActiveChannelSyncing = true,
 
