@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Meebey.SmartIrc4net;
 
 using IRCRelay.Logs;
+using Discord;
 
 namespace IRCRelay
 {
@@ -42,7 +43,6 @@ namespace IRCRelay
 
         public void SendMessage(string username, string message)
         {
-            session.Kill();
             ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
         }
 
@@ -69,8 +69,11 @@ namespace IRCRelay
 
         private void OnError(object sender, ErrorEventArgs e)
         {
-            Console.WriteLine("Error: " + e.ErrorMessage);
-            session.Kill();
+            /* Create a new thread to kill the session. We cannot block
+             * this Disconnect call */
+            new System.Threading.Thread(() => { session.Kill(); }).Start();
+
+            session.Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
 
         private void OnChannelMessage(object sender, IrcEventArgs e)

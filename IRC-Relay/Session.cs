@@ -15,6 +15,8 @@ namespace IRCRelay
         private bool alive;
 
         public bool IsAlive { get => alive; }
+        public IRC Irc { get => irc; }
+        internal Discord Discord { get => discord; }
 
         public Session(dynamic config)
         {
@@ -44,7 +46,7 @@ namespace IRCRelay
             switch (dest)
             {
                 case MessageDestination.Discord:
-                    Helpers.SendMessageAllToTarget(config.DiscordGuildName, message, config.DiscordChannelName, discord);
+                    discord.SendMessageAllToTarget(config.DiscordGuildName, message, config.DiscordChannelName);
                     break;
                 case MessageDestination.IRC:
                     irc.SendMessage(username, message);

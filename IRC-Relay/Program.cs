@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 using System.Threading.Tasks;
 using JsonConfig;
@@ -20,9 +21,8 @@ namespace IRCRelay
             do
             {
                 await session.StartSession();
-            } while (!session.IsAlive);
-            
-            
+                Console.WriteLine("Session failure... New session starting.");
+            } while (!session.IsAlive);   
         }
     }
 }

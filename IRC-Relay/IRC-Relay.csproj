@@ -97,7 +97,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Discord.cs" />
-    <Compile Include="Helpers.cs" />
     <Compile Include="IRC.cs" />
     <Compile Include="LogManager.cs" />
     <Compile Include="Program.cs" />
