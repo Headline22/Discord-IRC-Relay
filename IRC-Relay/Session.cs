@@ -43,23 +43,27 @@ namespace IRCRelay
             alive = true;
         }
 
-        public void Kill(TargetBot bot)
+        public async Task Kill(TargetBot bot)
         {
             switch (bot)
             {
                 case TargetBot.Discord:
                     discord.Dispose();
-                    Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+                    new System.Threading.Thread(async() => {
+                        this.discord = new Discord(config, this);
+                        await discord.SpawnBot();
+                    }).Start();
+                    await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
                     break;
                 case TargetBot.IRC:
                     irc.Client.RfcQuit();
-                    Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "IRC connection closed."));
+                    await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "IRC connection closed."));
                     break;
                 case TargetBot.Both:
                     discord.Dispose();
                     irc.Client.RfcQuit();
                     this.alive = false;
-                    Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+                    await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
                     break;
             }
 

@@ -94,7 +94,7 @@ namespace IRCRelay
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
-            new System.Threading.Thread(() => { session.Kill(Session.TargetBot.Both); }).Start();
+            new Thread(async() => await session.Kill(Session.TargetBot.Both)).Start();
 
             Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }

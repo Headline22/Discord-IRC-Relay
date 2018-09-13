@@ -84,7 +84,7 @@ namespace IRCRelay
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
-            new System.Threading.Thread(() => { session.Kill(Session.TargetBot.Discord); }).Start();
+            new System.Threading.Thread(async() => { await session.Kill(Session.TargetBot.Discord); }).Start();
 
             await Log(new LogMessage(LogSeverity.Critical, "OnDiscordDisconnect", ex.Message));
         }
