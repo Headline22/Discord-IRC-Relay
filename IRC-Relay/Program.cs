@@ -28,9 +28,17 @@ namespace IRCRelay
     {
         public static void Main(string[] args)
         {
+            dynamic config = null;
             Console.Title = "Discord IRC Relay (c) Michael Flaherty 2018";
-            var config = Config.ApplyJson(new StreamReader("settings.json").ReadToEnd(), new ConfigObject());
-
+            try
+            {
+                config = Config.ApplyJson(new StreamReader("settings.json").ReadToEnd(), new ConfigObject());
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine("Startup failure: {0}", ex.Message);
+                Environment.Exit(0);
+            }
             StartSessions(config).GetAwaiter().GetResult();
         }
 

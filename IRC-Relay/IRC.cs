@@ -94,7 +94,7 @@ namespace IRCRelay
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
-            new System.Threading.Thread(() => { session.Kill(); }).Start();
+            new System.Threading.Thread(() => { session.Kill(Session.TargetBot.Both); }).Start();
 
             Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
@@ -152,7 +152,7 @@ namespace IRCRelay
                 }
             }
 
-            session.SendMessage(Session.MessageDestination.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
+            session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
         }
     }
 }

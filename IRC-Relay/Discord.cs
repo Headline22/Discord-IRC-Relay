@@ -84,7 +84,7 @@ namespace IRCRelay
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
-            new System.Threading.Thread(() => { session.Kill(); }).Start();
+            new System.Threading.Thread(() => { session.Kill(Session.TargetBot.Discord); }).Start();
 
             await Log(new LogMessage(LogSeverity.Critical, "OnDiscordDisconnect", ex.Message));
         }
@@ -177,14 +177,14 @@ namespace IRCRelay
 
             foreach (var attachment in message.Attachments)
             {
-                session.SendMessage(Session.MessageDestination.IRC, attachment.Url, username);
+                session.SendMessage(Session.TargetBot.IRC, attachment.Url, username);
             }
 
             foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
             {
                 if (part.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
                 {
-                    session.SendMessage(Session.MessageDestination.IRC, part, username);
+                    session.SendMessage(Session.TargetBot.IRC, part, username);
                 }
             }
 
@@ -193,7 +193,7 @@ namespace IRCRelay
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
 
-                session.SendMessage(Session.MessageDestination.IRC, url, username);
+                session.SendMessage(Session.TargetBot.IRC, url, username);
             }
         }
 

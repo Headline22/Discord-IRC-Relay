@@ -22,9 +22,10 @@ namespace IRCRelay
 {
     public class Session
     {
-        public enum MessageDestination {
+        public enum TargetBot {
             Discord,
-            IRC
+            IRC,
+            Both
         };
 
         private Discord discord;
@@ -42,12 +43,26 @@ namespace IRCRelay
             alive = true;
         }
 
-        public void Kill()
+        public void Kill(TargetBot bot)
         {
-            discord.Dispose();
-            irc.Client.RfcQuit();
+            switch (bot)
+            {
+                case TargetBot.Discord:
+                    discord.Dispose();
+                    Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+                    break;
+                case TargetBot.IRC:
+                    irc.Client.RfcQuit();
+                    Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "IRC connection closed."));
+                    break;
+                case TargetBot.Both:
+                    discord.Dispose();
+                    irc.Client.RfcQuit();
+                    this.alive = false;
+                    Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+                    break;
+            }
 
-            Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Session killed."));
             this.alive = false;
         }
 
@@ -61,14 +76,14 @@ namespace IRCRelay
             await irc.SpawnBot();
         }
 
-        public void SendMessage(MessageDestination dest, string message, string username = "")
+        public void SendMessage(TargetBot dest, string message, string username = "")
         {
             switch (dest)
             {
-                case MessageDestination.Discord:
+                case TargetBot.Discord:
                     discord.SendMessageAllToTarget(config.DiscordGuildName, message, config.DiscordChannelName);
                     break;
-                case MessageDestination.IRC:
+                case TargetBot.IRC:
                     irc.SendMessage(username, message);
                     break;
             }
