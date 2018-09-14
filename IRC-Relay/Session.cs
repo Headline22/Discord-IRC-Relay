@@ -15,6 +15,7 @@
  * this program. If not, see http://www.gnu.org/licenses/.
  */
 
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 
@@ -50,7 +51,12 @@ namespace IRCRelay
                 case TargetBot.Discord:
                     discord.Kill();
                     await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
-                    await discord.SpawnBot();
+                    new Thread(async() =>
+                    {
+                        Thread.Sleep(System.TimeSpan.FromSeconds(1).Milliseconds);
+                        this.discord = new Discord(config, this);
+                        await discord.SpawnBot();
+                    }).Start();
                     break;
                 case TargetBot.IRC:
                     irc.Client.RfcQuit();
