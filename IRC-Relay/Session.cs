@@ -48,19 +48,17 @@ namespace IRCRelay
             switch (bot)
             {
                 case TargetBot.Discord:
-                    discord.Dispose();
-                    new System.Threading.Thread(async() => {
-                        this.discord = new Discord(config, this);
-                        await discord.SpawnBot();
-                    }).Start();
+                    discord.Kill();
                     await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));
+                    await discord.SpawnBot();
                     break;
                 case TargetBot.IRC:
                     irc.Client.RfcQuit();
+                    await irc.SpawnBot();
                     await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "IRC connection closed."));
                     break;
-                case TargetBot.Both:
-                    discord.Dispose();
+                case TargetBot.Both: // if we kill both, let main loop recover
+                    discord.Kill();
                     irc.Client.RfcQuit();
                     this.alive = false;
                     await Discord.Log(new LogMessage(LogSeverity.Critical, "KillSesh", "Discord connection closed."));

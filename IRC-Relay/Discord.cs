@@ -89,6 +89,15 @@ namespace IRCRelay
             await Log(new LogMessage(LogSeverity.Critical, "OnDiscordDisconnect", ex.Message));
         }
 
+        public void Kill()
+        {
+            try
+            {
+                this.Dispose();
+            }
+            catch { }
+        }
+
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
             string url = "";
