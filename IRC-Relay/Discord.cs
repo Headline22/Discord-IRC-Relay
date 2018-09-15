@@ -114,7 +114,7 @@ namespace IRCRelay
             }
 
             /* Santize discord-specific notation to human readable things */
-            string formatted = CodeblockToURL(messageParam.Content, out string url);
+            string formatted = DoURLMessage(messageParam.Content, message);
             formatted = MentionToUsername(formatted, message);
             formatted = EmojiToName(formatted, message);
             formatted = ChannelMentionToName(formatted, message);
@@ -168,18 +168,10 @@ namespace IRCRelay
 
             foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
             {
-                if (part.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
+                if (part.Trim().Length != 0) // if the string is not empty or just spaces
                 {
                     session.SendMessage(Session.MessageDestination.IRC, part, username);
                 }
-            }
-
-            if (!url.Equals("")) // hastebin upload is succesfuly if url contains any data
-            {
-                if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
-
-                session.SendMessage(Session.MessageDestination.IRC, url, username);
             }
         }
 
@@ -195,7 +187,7 @@ namespace IRCRelay
 
         /**     Helper methods      **/
 
-        public static string CodeblockToURL(string input, out string url)
+        public string DoURLMessage(string input, SocketUserMessage msg)
         {
             string text = "```";
             if (input.Contains("```"))
@@ -205,32 +197,38 @@ namespace IRCRelay
 
                 string code = input.Substring(start + text.Length, (end - start) - text.Length);
 
-                url = UploadMarkDown(code);
+                using (var client = new WebClient())
+                {
+                    client.Headers[HttpRequestHeader.ContentType] = "text/plain";
+
+                    client.UploadDataCompleted += Client_UploadDataCompleted;
+                    client.UploadDataAsync(new Uri("https://hastebin.com/documents"), null, Encoding.ASCII.GetBytes(input), msg);
+                }
 
                 input = input.Remove(start, (end - start) + text.Length);
             }
-            else
-            {
-                url = "";
-            }
             return input;
         }
-        public static string UploadMarkDown(string input)
+
+        private void Client_UploadDataCompleted(object sender, UploadDataCompletedEventArgs e)
         {
-            using (var client = new WebClient())
+            if (e.Error != null)
             {
-                client.Headers[HttpRequestHeader.ContentType] = "text/plain";
+                Log(new LogMessage(LogSeverity.Critical, "HastebinUpload", e.Error.Message));
+                return;
+            }
+            JObject obj = JObject.Parse(Encoding.UTF8.GetString(e.Result));
 
-                var response = client.UploadString("https://hastebin.com/documents", input);
-                JObject obj = JObject.Parse(response);
-
-                if (!obj.HasValues)
-                {
-                    return "";
-                }
-
+            if (obj.HasValues)
+            {
                 string key = (string)obj["key"];
-                return "https://hastebin.com/" + key + ".cs";
+                string result = "https://hastebin.com/" + key + ".cs";
+
+                var msg = (SocketUserMessage)e.UserState;
+                if (config.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, result, "log.txt");
+
+                session.SendMessage(Session.MessageDestination.IRC, result, msg.Author.Username);
             }
         }
         public static string MentionToUsername(string input, SocketUserMessage message)

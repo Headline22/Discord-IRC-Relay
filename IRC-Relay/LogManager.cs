@@ -31,6 +31,9 @@ namespace IRCRelay.Logs
     {
         public static void WriteLog(MsgSendType type, string name, string message, string filename)
         {
+            if (message.Trim().Length == 0)
+                return;
+
             string prefix;
             if (type == MsgSendType.DiscordToIRC)
             {
