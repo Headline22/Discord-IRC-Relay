@@ -115,7 +115,7 @@ namespace IRCRelay
 
             /* Santize discord-specific notation to human readable things */
             string formatted = CodeblockToURL(messageParam.Content, out string url);
-            formatted = MentionToUsername(formatted, message);
+            formatted = MentionToNickname(formatted, message);
             formatted = EmojiToName(formatted, message);
             formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
@@ -233,7 +233,7 @@ namespace IRCRelay
                 return "https://hastebin.com/" + key + ".cs";
             }
         }
-        public static string MentionToUsername(string input, SocketUserMessage message)
+        public static string MentionToNickname(string input, SocketUserMessage message)
         {
             Regex regex = new Regex("<@!?([0-9]+)>"); // create patern
 
@@ -256,7 +256,8 @@ namespace IRCRelay
                 * occured. Thus, we add the length and then subtract after the replace
                 */
                 difference += input.Length;
-                input = ReplaceFirst(input, removal, user.Username);
+                string username = ((user as SocketGuildUser)?.Nickname ?? user.Username);
+                input = ReplaceFirst(input, removal, username);
                 difference -= input.Length;
             }
 
