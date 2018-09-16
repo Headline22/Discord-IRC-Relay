@@ -208,7 +208,10 @@ namespace IRCRelay
 
         public static Task Log(LogMessage msg)
         {
-            return Task.Run(() => Console.WriteLine(msg.ToString()));
+            return Task.Run(() => {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(msg.ToString());
+            });
         }
 
         public void Dispose()
