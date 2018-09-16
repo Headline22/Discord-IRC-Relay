@@ -240,7 +240,7 @@ namespace IRCRelay
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, result, "log.txt");
 
-                session.SendMessage(Session.MessageDestination.IRC, result, msg.Author.Username);
+                session.SendMessage(Session.TargetBot.IRC, result, msg.Author.Username);
             }
         }
         public static string MentionToNickname(string input, SocketUserMessage message)
