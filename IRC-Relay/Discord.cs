@@ -100,12 +100,12 @@ namespace IRCRelay
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
-            string url = "";
             if (!(messageParam is SocketUserMessage message)) return;
 
             if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
             if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
+            if (messageParam.Content.Contains("__NEVER_BE_SENT_PLEASE")) return; // don't break me
 
             if (config.DiscordUserIDBlacklist != null) //bcompat support
             {
@@ -122,22 +122,9 @@ namespace IRCRelay
                 }
             }
 
-            string formatted = messageParam.Content;
-            string text = "```";
-            if (formatted.Contains(text))
-            {
-                int start = formatted.IndexOf(text, StringComparison.CurrentCulture);
-                int end = formatted.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
-
-                string code = formatted.Substring(start + text.Length, (end - start) - text.Length);
-
-                url = UploadMarkDown(code);
-
-                formatted = formatted.Remove(start, (end - start) + text.Length);
-            }
-
             /* Santize discord-specific notation to human readable things */
-            formatted = MentionToUsername(formatted, message);
+            string formatted = DoURLMessage(messageParam.Content, message);
+            formatted = MentionToNickname(formatted, message);
             formatted = EmojiToName(formatted, message);
             formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
@@ -164,7 +151,6 @@ namespace IRCRelay
             }
 
             string[] parts = formatted.Split('\n');
-
             if (parts.Length > 3) // don't spam IRC, please.
             {
                 await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
@@ -191,18 +177,10 @@ namespace IRCRelay
 
             foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
             {
-                if (part.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
+                if (part.Trim().Length != 0) // if the string is not empty or just spaces
                 {
                     session.SendMessage(Session.TargetBot.IRC, part, username);
                 }
-            }
-
-            if (!url.Equals("")) // hastebin upload is succesfuly if url contains any data
-            {
-                if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
-
-                session.SendMessage(Session.TargetBot.IRC, url, username);
             }
         }
 
@@ -221,25 +199,51 @@ namespace IRCRelay
 
         /**     Helper methods      **/
 
-        public static string UploadMarkDown(string input)
+        public string DoURLMessage(string input, SocketUserMessage msg)
         {
-            using (var client = new WebClient())
+            string text = "```";
+            if (input.Contains("```"))
             {
-                client.Headers[HttpRequestHeader.ContentType] = "text/plain";
+                int start = input.IndexOf(text, StringComparison.CurrentCulture);
+                int end = input.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
 
-                var response = client.UploadString("https://hastebin.com/documents", input);
-                JObject obj = JObject.Parse(response);
+                string code = input.Substring(start + text.Length, (end - start) - text.Length);
 
-                if (!obj.HasValues)
+                using (var client = new WebClient())
                 {
-                    return "";
+                    client.Headers[HttpRequestHeader.ContentType] = "text/plain";
+
+                    client.UploadDataCompleted += Client_UploadDataCompleted;
+                    client.UploadDataAsync(new Uri("https://hastebin.com/documents"), null, Encoding.ASCII.GetBytes(input), msg);
                 }
 
+                input = input.Remove(start, (end - start) + text.Length);
+            }
+            return input;
+        }
+
+        private void Client_UploadDataCompleted(object sender, UploadDataCompletedEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                Log(new LogMessage(LogSeverity.Critical, "HastebinUpload", e.Error.Message));
+                return;
+            }
+            JObject obj = JObject.Parse(Encoding.UTF8.GetString(e.Result));
+
+            if (obj.HasValues)
+            {
                 string key = (string)obj["key"];
-                return "https://hastebin.com/" + key + ".cs";
+                string result = "https://hastebin.com/" + key + ".cs";
+
+                var msg = (SocketUserMessage)e.UserState;
+                if (config.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, result, "log.txt");
+
+                session.SendMessage(Session.MessageDestination.IRC, result, msg.Author.Username);
             }
         }
-        public static string MentionToUsername(string input, SocketUserMessage message)
+        public static string MentionToNickname(string input, SocketUserMessage message)
         {
             Regex regex = new Regex("<@!?([0-9]+)>"); // create patern
 
@@ -262,7 +266,8 @@ namespace IRCRelay
                 * occured. Thus, we add the length and then subtract after the replace
                 */
                 difference += input.Length;
-                input = ReplaceFirst(input, removal, user.Username);
+                string username = ((user as SocketGuildUser)?.Nickname ?? user.Username);
+                input = ReplaceFirst(input, removal, username);
                 difference -= input.Length;
             }
 
@@ -271,56 +276,26 @@ namespace IRCRelay
 
         public static string Unescape(string input)
         {
-            /* Main StringBuilder for messages that aren't in '`' */
-            StringBuilder sb = new StringBuilder();
+            Regex reg = new Regex("\\`[^`]*\\`");
 
-            /*
-            * locations - List of indices where the first '`' lies
-            * peices - List of strings which live inbetween the '`'s
-            */
-            List<int> locations = new List<int>();
-            List<StringBuilder> peices = new List<StringBuilder>();
-            for (int i = 0; i < input.Length; i++)
-            {
-                if (input[i] == '`') // we hit a '`'
-                {
-                    int j;
+            int count = 0;
+            List<string> peices = new List<string>();
+            reg.Replace(input, (m) => {
+                peices.Add(m.Value);
+                input = input.Replace(m.Value, string.Format("__NEVER_BE_SENT_PLEASE_{0}_!@#%", count));
+                count++;
+                return ""; // doesn't matter what we replace with
+            });
 
-                    StringBuilder slice = new StringBuilder(); // used for capturing the str inbetween '`'
-                    slice.Append('`'); // append the '`' for insertion later
-
-                    /* we'll loop from here until we encounter the next '`',
-                    * appending as we go.
-                    */
-                    for (j = i + 1; j < input.Length && input[j] != '`'; j++)
-                    {
-                        slice.Append(input[j]);
-                    }
-
-                    if (j < input.Length)
-                        slice.Append('`'); // append the '`' for insertion later
-
-                    locations.Add(i); // push the index of the first '`'
-                    peices.Add(slice); // push the captured string
-
-                    i = j; // advance the outer loop to where our inner one stopped
-                }
-                else // we didn't hit a '`', so just append :)
-                {
-                    sb.Append(input[i]);
-                }
-            }
+            string retstr = Regex.Replace(input, @"\\([^A-Za-z0-9])", "$1");
 
             // From here we prep the return string by doing our regex on the input that's not in '`'
-            string retstr = Regex.Replace(sb.ToString(), @"\\([^A-Za-z0-9])", "$1");
+            reg = new Regex("__NEVER_BE_SENT_PLEASE_([0-9]+)_!@#%");
+            input = reg.Replace(retstr, (m) => {
+                return peices[int.Parse(m.Result("$1"))].ToString();
+            });
 
-            // Now we'll just loop the peices, inserting @ the locations we saved earlier
-            for (int i = 0; i < peices.Count; i++)
-            {
-                retstr = retstr.Insert(locations[i], peices[i].ToString());
-            }
-
-            return retstr; // thank fuck we're done
+            return input; // thank fuck we're done
         }
 
         public static string ChannelMentionToName(string input, SocketUserMessage message)

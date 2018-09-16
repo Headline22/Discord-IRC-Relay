@@ -32,7 +32,6 @@ namespace IRCRelay
         private Session session;
         private dynamic config;
         private IrcClient ircClient;
-        public bool shouldrun;
 
         public IrcClient Client { get => ircClient; set => ircClient = value; }
 
@@ -66,7 +65,6 @@ namespace IRCRelay
 
         public async Task SpawnBot()
         {
-            shouldrun = true;
             await Task.Run(() =>
             {
                 ircClient.Connect(config.IRCServer, config.IRCPort);
