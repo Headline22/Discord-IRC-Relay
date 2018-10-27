@@ -283,10 +283,11 @@ namespace IRCRelay
                 string result = "https://hastebin.com/" + key + ".cs";
 
                 var msg = (SocketUserMessage)e.UserState;
+                string username = (msg.Author as SocketGuildUser)?.Nickname ?? msg.Author.Username;
                 if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, result, "log.txt");
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, result, "log.txt");
 
-                session.SendMessage(Session.TargetBot.IRC, result, msg.Author.Username);
+                session.SendMessage(Session.TargetBot.IRC, result, username);
             }
         }
 
