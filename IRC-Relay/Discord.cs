@@ -327,9 +327,9 @@ namespace IRCRelay
             Regex reg = new Regex("\\`[^`]*\\`");
 
             int count = 0;
-            List<string> peices = new List<string>();
+            List<string> pieces = new List<string>();
             reg.Replace(input, (m) => {
-                peices.Add(m.Value);
+                pieces.Add(m.Value);
                 input = input.Replace(m.Value, string.Format("__NEVER_BE_SENT_PLEASE_{0}_!@#%", count));
                 count++;
                 return ""; // doesn't matter what we replace with
@@ -340,10 +340,10 @@ namespace IRCRelay
             // From here we prep the return string by doing our regex on the input that's not in '`'
             reg = new Regex("__NEVER_BE_SENT_PLEASE_([0-9]+)_!@#%");
             input = reg.Replace(retstr, (m) => {
-                return peices[int.Parse(m.Result("$1"))].ToString();
+                return pieces[int.Parse(m.Result("$1"))].ToString();
             });
 
-            return input; // thank fuck we're done
+            return input; // thank f***k we're done
         }
 
         public static string ChannelMentionToName(string input, SocketUserMessage message)
