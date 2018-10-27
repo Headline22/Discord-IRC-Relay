@@ -77,7 +77,7 @@ namespace IRCRelay
 
         public async Task OnDiscordConnected()
         {
-            await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initalized."));
+            await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initialized."));
         }
 
         /* When we disconnect from discord (we got booted off), we'll remake */

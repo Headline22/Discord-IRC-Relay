@@ -94,7 +94,7 @@ namespace IRCRelay
 
         private void OnConnected(object sender, EventArgs e)
         {
-            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initalized."));
+            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initialized."));
         }
 
         private void OnDisconnected(object sender, EventArgs e)
