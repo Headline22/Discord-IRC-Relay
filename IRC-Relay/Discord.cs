@@ -252,8 +252,8 @@ namespace IRCRelay
                 var url = await response.Content.ReadAsStringAsync();
 
                 if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, url, "log.txt");
-                session.SendMessage(Session.TargetBot.IRC, url, msg.Author.Username);
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
+                session.SendMessage(Session.TargetBot.IRC, url, username);
 
             }
         }
