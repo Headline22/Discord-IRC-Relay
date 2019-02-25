@@ -335,7 +335,7 @@ namespace IRCRelay
                 return ""; // doesn't matter what we replace with
             });
 
-            string retstr = Regex.Replace(input, @"\\([^A-Za-z0-9])", "$1");
+            string retstr = Regex.Replace(input, @"\\([^A-Za-z0-9 ])", "$1");
 
             // From here we prep the return string by doing our regex on the input that's not in '`'
             reg = new Regex("__NEVER_BE_SENT_PLEASE_([0-9]+)_!@#%");
